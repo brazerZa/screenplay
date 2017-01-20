@@ -73,11 +73,13 @@ Home.prototype.load = function() {
 		var columnCount = 1;		
 		var currentColumn = 0;
 		
+
 		data.Items = data.Items.filter(function(item) {
 			return item.CollectionType == "movies" ||
 				item.CollectionType == "photos" ||
 				item.CollectionType == "music" ||
 				(item.CollectionType == "tvshows") ||
+//				(item.CollectionType == "boxsets") ||
 				(item.CollectionType == null)
 		});
 		
@@ -92,7 +94,6 @@ Home.prototype.load = function() {
 			includeItemTypes: "movie,episode",		
 			sortBy: 'dateplayed',
 			sortOrder: 'descending',
-			limit: 2,
 			parent: {collectionType: data.collectionType, name: data.name, imageTag: data.imageTag},	
 			filters: 'IsResumable',
 			success: displayUserResumeItems,
@@ -159,6 +160,8 @@ Home.prototype.load = function() {
 			});				
 		});
 
+// Collections logic
+		
 // Settings logic
 		limit = 5;
 		columnCount = 1;		
@@ -211,6 +214,16 @@ Home.prototype.load = function() {
 	}
 
 	function displayUserResumeItems(data) {
+		var today = new Date()
+		var diff
+		var item
+		for (var index = 0; index < data.Items.length; index++)
+		{
+			item = data.Items[index]
+			diff = Math.abs(today - Date.parse(item.UserData.LastPlayedDate))
+			if (diff > 86400000*prefs.continueWatchingDays  || item.UserData.PlaybackPositionTicks == 0 || index > 1) // only show 2 most recent valid items played < prefs.continueWatchingDays ago (milliseconds)
+				data.Items.splice(index--,1)
+		};
 		if (data.Items.length > 0) 
 		{					
 			data.Items.forEach(function(item, index) {						

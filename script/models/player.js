@@ -53,9 +53,8 @@ Player.prototype.load = function(data, settings) {
 		var node = dom.querySelector("#video");
 		node.setAttribute("crossorigin", "anonymous")
 		node.setAttribute("webkit-playsinline","")
-        if (prefs.directPlay == true)
+       if (prefs.directPlay == true)
         {	
-           	prefs.mimeType = item.MediaSources[0].Container
           	prefs.mimeType = "mp4"
        	    dom.append("#video", {
 			    nodeName: "source",
@@ -71,12 +70,29 @@ Player.prototype.load = function(data, settings) {
         	prefs.mimeType = "m3u8"
         	dom.append("#video", {
 			    nodeName: "source",
-			    src: emby.getVideoHlsStreamUrl({
-				    itemId: item.Id
-			    }),
-			    "type": mime.lookup(prefs.mimeType)
+		        src: emby.getVideoHlsStreamUrl({
+			        itemId: item.Id
+		        }),
+		        "type": mime.lookup(prefs.mimeType)
 		    });
         }
+		
+   	   if (item.MediaSources[0].DefaultSubtitleStreamIndex == null)
+   		   prefs.subtitleAvailable = false;
+   	   else
+   		   prefs.subtitleAvailable = true
+   		   
+		dom.append("#video", {
+	        nodeName: "track",
+		    "kind": "subtitles",
+//		    "label": "English",
+//		    "srclang": "en",
+		    src: emby.getVideoSubtitleData({
+			    itemId: item.Id,
+			    mediaSourceId: item.MediaSources[0].Id,
+			    mediaSourceIndex: item.MediaSources[0].DefaultSubtitleStreamIndex
+		    })
+        });
 		var video = document.getElementById("video");		
 		var playerRegion = document.getElementById("player");		
 		var playButton = document.getElementById("play-pause");
@@ -84,7 +100,7 @@ Player.prototype.load = function(data, settings) {
 		var infoButton = document.getElementById("info-button");
 		var seekBar = document.getElementById("seek-bar");
 
-		
+		video.textTracks[0].mode = 'hidden'
 		video.addEventListener("playing", function(event) {
 			time = Math.floor(event.target.currentTime);	
 			var ticks = time * 10000000;
@@ -103,7 +119,7 @@ Player.prototype.load = function(data, settings) {
 		});
 		
 		video.addEventListener("ended", function(event) {
-			self.close();
+			history.back();
 		});
 	
 		video.addEventListener("timeupdate", function(event) {
@@ -178,7 +194,7 @@ Player.prototype.load = function(data, settings) {
 
 		// Event listener for the stop button
 		stopButton.addEventListener("click", function() {
-			self.close();
+			history.back();
 		});
 
 		// Event listener for the seek bar
@@ -216,10 +232,13 @@ Player.prototype.load = function(data, settings) {
 		        options.option = {};
 		        options.option.transmission = {};
 		        options.option.transmission.playTime = {};
+		       	options.option.a3dMode = prefs.video3DFormat
 		        options.option.transmission.playTime.start = prefs.currentTime*1000;
 
+		        var str = escape(JSON.stringify(options))
+		        str = str.replace("a3dMode","3dMode")
 		        var node = dom.querySelector("source");
-		        node.setAttribute('type',mime.lookup("m3u8")+';mediaOption=' +  escape(JSON.stringify(options)));
+		        node.setAttribute('type',mime.lookup("m3u8")+';mediaOption=' +  str);
 		        video.load();
 			}
 	        video.play();
@@ -230,37 +249,39 @@ Player.prototype.load = function(data, settings) {
 			self.showControls({duration: 6000});
 		});
 		
+        var options = {};
+        options.option = {};
+       	options.option.a3dMode = prefs.video3DFormat
 		if (prefs.resumeTicks > 0)
 		{
-			//get seconds from ticks
-			var ts = prefs.resumeTicks / 10000000;
-			prefs.resumeTicks = 0;
+           //get seconds from ticks
+		   var ts = prefs.resumeTicks / 10000000;
+		   prefs.resumeTicks = 0;
 
-			//conversion based on seconds
-			var hh = Math.floor( ts / 3600);
-			var mm = Math.floor( (ts % 3600) / 60);
-			var ss = Math.floor(  (ts % 3600) % 60);
+		   //conversion based on seconds
+		   var hh = Math.floor( ts / 3600);
+		   var mm = Math.floor( (ts % 3600) / 60);
+		   var ss = Math.floor(  (ts % 3600) % 60);
 
-			//prepend '0' when needed
-			hh = hh < 10 ? '0' + hh : hh;
-			mm = mm < 10 ? '0' + mm : mm;
-			ss = ss < 10 ? '0' + ss : ss;
+		   //prepend '0' when needed
+		   hh = hh < 10 ? '0' + hh : hh;
+		   mm = mm < 10 ? '0' + mm : mm;
+		   ss = ss < 10 ? '0' + ss : ss;
 
-			//use it
-			var str = hh + ":" + mm + ":" + ss;
-			playerpopup.show({
-				duration: 2000,
-				text: "Resuming Playback at " + str
-			});	
-	        var options = {};
-	        options.option = {};
-	        options.option.transmission = {};
-	        options.option.transmission.playTime = {};
-	        options.option.transmission.playTime.start = Math.floor(ts) * 1000;
-	 
-			var node = dom.querySelector("source");
-            node.setAttribute('type',mime.lookup(prefs.mimeType)+';mediaOption=' +  escape(JSON.stringify(options)));
+  			   //use it
+		   var str = hh + ":" + mm + ":" + ss;
+		   playerpopup.show({
+			   duration: 2000,
+			   text: "Resuming Playback at " + str
+		   });	
+           options.option.transmission = {};
+           options.option.transmission.playTime = {};
+           options.option.transmission.playTime.start = Math.floor(ts) * 1000;
 		}
+        var str = escape(JSON.stringify(options))
+        str = str.replace("a3dMode","3dMode")
+		var node = dom.querySelector("source");
+        node.setAttribute('type',mime.lookup(prefs.mimeType)+';mediaOption=' +  str);
 		video.load();
 		video.play();
 	}
@@ -287,6 +308,7 @@ Player.prototype.close = function(event) {
  
     dom.remove("#player");	
 	dom.remove("#video-controls");
+	dom.focus("#viewPlay")
    	
 };
 
@@ -387,10 +409,13 @@ Player.prototype.restartAt = function(){
         options.option = {};
         options.option.transmission = {};
         options.option.transmission.playTime = {};
+       	options.option.a3dMode = prefs.video3DFormat
         options.option.transmission.playTime.start = restartPoint;
 
+        var str = escape(JSON.stringify(options))
+        str = str.replace("a3dMode","3dMode")
         var node = dom.querySelector("source");
-        node.setAttribute('type',mime.lookup("m3u8")+';mediaOption=' +  escape(JSON.stringify(options)));
+        node.setAttribute('type',mime.lookup("m3u8")+';mediaOption=' +  str);
         video.load();
         video.play();
     }
@@ -447,3 +472,35 @@ Player.prototype.showControls = function(settings){
 Player.prototype.hideControls = function(){
 	dom.hide("#video-controls");
 };
+Player.prototype.showSubtitles = function(){
+ 	if (!prefs.subtitleAvailable)
+ 	{
+		playerpopup.show({
+			duration: 1000,
+			text: "Subtitles not available"
+		});	
+	   return
+ 	}
+ 	var video = document.getElementById("video");
+	video.textTracks[0].mode = 'showing'
+	playerpopup.show({
+		duration: 1000,
+		text: "Subtitles Enabled"
+	});	
+}
+Player.prototype.hideSubtitles = function(){
+ 	if (!prefs.subtitleAvailable)
+ 	{
+		playerpopup.show({
+			duration: 1000,
+			text: "Subtitles not available"
+		});	
+ 		return
+ 	}
+ 	var video = document.getElementById("video");
+	video.textTracks[0].mode = 'hidden'
+		playerpopup.show({
+			duration: 1000,
+			text: "Subtitles Disabled"
+		});	
+}

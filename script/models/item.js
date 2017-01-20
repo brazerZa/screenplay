@@ -165,7 +165,17 @@ Item.prototype.load = function(id, settings) {
 		
 		if (data.Type != "Series" && data.Type != "Season")
 		{
-			focus("#userViews a:first-child");
+            focus("#userViews a:first-child");
+			if (data.Video3DFormat == "HalfTopAndBottom")
+			   prefs.video3DFormat = "top_bottom"
+			else				   
+			if (data.Video3DFormat == "HalfSideBySide")
+			   prefs.video3DFormat = "side_by_side_LR"
+			else				   
+			if (data.Video3DFormat == "FullSideBySide")
+				prefs.video3DFormat = "side_by_side_full_LR"
+			else
+				prefs.video3DFormat = "2D"
 		}
 
 
@@ -178,7 +188,7 @@ Item.prototype.load = function(id, settings) {
 			dom.dispatchCustonEvent(document, "playItem", self.data);
 		});
 
-		dom.delegate("#item", "a", "keydown", navigation);
+		dom.delegate("#view", "a", "keydown", navigation);
 	}
 
 	function displayUserItemChildren(data) {
@@ -205,6 +215,7 @@ Item.prototype.load = function(id, settings) {
 		var self = event.delegateTarget;
 
 		if (event.which == keys.KEY_OK) {
+			event.stopPropagation()
 			self.click();
 			return;
 		}

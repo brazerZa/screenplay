@@ -36,6 +36,7 @@
 			var item = new Item();
 			var player = new Player();
 			var controlsVisible = false;
+			var subtitlesVisible = false;
 			var firstEvent = true;
 									
 			dom.addClass("body", device.bodyClass);
@@ -102,7 +103,7 @@
 			});						
 
 			dom.on(document, "playItem", function(event) {
-				controlsVisible = false;
+				controlsVisible = subtitlesVisible = false;
 				firstEvent = true;
 				player.load(event.detail);
 			});	
@@ -116,7 +117,7 @@
 					}
 					else	
 			    	{	
-				    	player.close()
+						player.close()
 				    	return;				
 			    	}
 				if (event.state) {
@@ -225,6 +226,18 @@
 			        	 	      player.showControls({persist: true});
 			        	 	      controlsVisible = true;
 			        	       }
+			        	   else
+			        	   if (Math.floor(prefs.redButton) == 3)
+			        	       if (subtitlesVisible)
+			        	       {
+			        	          player.hideSubtitles();
+			        	          subtitlesVisible = false;
+			        	       }
+			        	       else
+			        	       {
+			        	 	      player.showSubtitles();
+			        	 	      subtitlesVisible = true;
+			        	       }
 				           return;
 				        case keys.KEY_GREEN:
 				        	if (Math.floor(prefs.greenButton) == 2)
@@ -238,6 +251,17 @@
 				        	 	   player.showControls({persist: true});
 				        	 	   controlsVisible = true;
 				        	    }
+				        	   if (Math.floor(prefs.greenButton) == 3)
+				        	       if (subtitlesVisible)
+				        	       {
+				        	          player.hideSubtitles();
+				        	          subtitlesVisible = false;
+				        	       }
+				        	       else
+				        	       {
+				        	 	      player.showSubtitles();
+				        	 	      subtitlesVisible = true;
+				        	       }
 					        return;
 				        case keys.KEY_YELLOW:
 				        	if (Math.floor(prefs.yellowButton) == 2)
@@ -251,6 +275,17 @@
 				        	 	   player.showControls({persist: true});
 				        	 	   controlsVisible = true;
 				        	    }
+				        	   if (Math.floor(prefs.yellowButton) == 3)
+				        	       if (subtitlesVisible)
+				        	       {
+				        	          player.hideSubtitles();
+				        	          subtitlesVisible = false;
+				        	       }
+				        	       else
+				        	       {
+				        	 	      player.showSubtitles();
+				        	 	      subtitlesVisible = true;
+				        	       }
 					        return;
 				        case keys.KEY_BLUE:
 				        	if (Math.floor(prefs.blueButton) == 2)
@@ -264,6 +299,17 @@
 				        	 	   player.showControls({persist: true});
 				        	 	   controlsVisible = true;
 				        	    }
+				        	   if (Math.floor(prefs.blueButton) == 3)
+				        	       if (subtitlesVisible)
+				        	       {
+				        	          player.hideSubtitles();
+				        	          subtitlesVisible = false;
+				        	       }
+				        	       else
+				        	       {
+				        	 	      player.showSubtitles();
+				        	 	      subtitlesVisible = true;
+				        	       }
 					        return;
 					    case keys.KEY_RIGHT:
 						    player.skip();
@@ -278,7 +324,7 @@
 						    player.play();
 						    return;
 					    case keys.KEY_STOP:
-						    player.close();
+					    	history.back();
 						    return;
 					    case keys.KEY_FAST_FWD:
 						    player.fastforward();
