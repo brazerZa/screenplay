@@ -219,16 +219,20 @@ Server.prototype.close = function(index) {
 
 Server.prototype.formatServerUrl = function(url) {
 	url = url.trim();
-	
-	if (!url.includes("http://")) {
-		url = "http://" + url;
-	}
-	
-	if (!url.substr(5).includes(":")) {
-		url = url + ":8096";
-	}
-	
 	url = url.replace(/\s+/g,'') // remove whitespace
 	url = url.replace(/[^a-zA-Z0-9/:-]/g,'.') // change any specials to a dot
+	
+	if ((!url.includes("http://")) && (!url.includes("https://"))) 
+		url = "http://" + url;
+	
+	
+	if (!url.substr(6).includes(":"))
+		if (url.includes("http://"))			
+			url = url + ":8096";
+		else
+		if (url.includes("https://"))	
+			url = url + ":8920";
+	
+	
 	return url;
 };
